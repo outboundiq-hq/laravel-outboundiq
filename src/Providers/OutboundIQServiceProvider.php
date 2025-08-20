@@ -21,12 +21,12 @@ class OutboundIQServiceProvider extends ServiceProvider
                 apiKey: config('outboundiq.api_key'),
                 options: [
                     'enabled' => config('outboundiq.enabled', true),
-                    'batch_size' => config('outboundiq.batch_size', 50),
-                    'buffer_size' => config('outboundiq.buffer_size', 100),
-                    'flush_interval' => config('outboundiq.flush_interval', 60),
-                    'timeout' => config('outboundiq.timeout', 5),
-                    'retry_attempts' => config('outboundiq.retry_attempts', 3),
-                    'transport' => config('outboundiq.transport', 'file'),
+                    'batch_size' => config('outboundiq.batch_size'),
+                    'buffer_size' => config('outboundiq.buffer_size'),
+                    'flush_interval' => config('outboundiq.flush_interval'),
+                    'timeout' => config('outboundiq.timeout'),
+                    'retry_attempts' => config('outboundiq.retry_attempts'),
+                    'transport' => config('outboundiq.transport'),
                     'temp_dir' => config('outboundiq.temp_dir')
                 ]
             );
