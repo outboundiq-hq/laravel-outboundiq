@@ -21,7 +21,13 @@ class OutboundIQServiceProvider extends ServiceProvider
                 apiKey: config('outboundiq.api_key'),
                 options: [
                     'enabled' => config('outboundiq.enabled', true),
-                    'environment' => config('outboundiq.environment', 'production')
+                    'batch_size' => config('outboundiq.batch_size', 50),
+                    'buffer_size' => config('outboundiq.buffer_size', 100),
+                    'flush_interval' => config('outboundiq.flush_interval', 60),
+                    'timeout' => config('outboundiq.timeout', 5),
+                    'retry_attempts' => config('outboundiq.retry_attempts', 3),
+                    'transport' => config('outboundiq.transport', 'file'),
+                    'temp_dir' => config('outboundiq.temp_dir')
                 ]
             );
         });
