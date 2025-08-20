@@ -1,5 +1,5 @@
 {
-    "name": "outboundiq/laravel",
+    "name": "outboundiq/laravel-outboundiq",
     "description": "OutboundIQ integration for Laravel",
     "type": "library",
     "require": {
