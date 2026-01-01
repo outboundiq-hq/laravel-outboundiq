@@ -5,11 +5,13 @@ namespace OutboundIQ\Laravel\Listeners;
 use Illuminate\Http\Client\Events\RequestSending;
 use Illuminate\Http\Client\Events\ResponseReceived;
 use Illuminate\Http\Client\Events\ConnectionFailed;
+use Illuminate\Support\Facades\Auth;
 use OutboundIQ\Client;
 
 class TrackHttpRequest
 {
     private array $requestTimes = [];
+    private array $requestUserContext = [];
 
     /**
      * Create the event listener.
@@ -23,8 +25,13 @@ class TrackHttpRequest
      */
     public function handleSending(RequestSending $event): void
     {
+        $key = $this->getRequestKey($event->request);
+        
         // Store the start time for this request
-        $this->requestTimes[$this->getRequestKey($event->request)] = microtime(true);
+        $this->requestTimes[$key] = microtime(true);
+        
+        // Capture user context at request time (important for async scenarios)
+        $this->requestUserContext[$key] = $this->captureUserContext();
     }
 
     /**
@@ -32,7 +39,9 @@ class TrackHttpRequest
      */
     public function handleResponse(ResponseReceived $event): void
     {
+        $key = $this->getRequestKey($event->request);
         $startTime = $this->getRequestStartTime($event->request);
+        $userContext = $this->requestUserContext[$key] ?? $this->captureUserContext();
         
         $this->client->trackApiCall(
             url: (string) $event->request->url(),
@@ -43,11 +52,13 @@ class TrackHttpRequest
             requestBody: $event->request->body(),
             responseHeaders: $event->response->headers(),
             responseBody: $event->response->body(),
-            request_type: 'http'
+            request_type: 'http',
+            userContext: $userContext
         );
 
-        // Clean up the start time
+        // Clean up
         $this->removeRequestStartTime($event->request);
+        unset($this->requestUserContext[$key]);
     }
 
     /**
@@ -55,7 +66,9 @@ class TrackHttpRequest
      */
     public function handleFailure(ConnectionFailed $event): void
     {
+        $key = $this->getRequestKey($event->request);
         $startTime = $this->getRequestStartTime($event->request);
+        $userContext = $this->requestUserContext[$key] ?? $this->captureUserContext();
         
         $this->client->trackApiCall(
             url: (string) $event->request->url(),
@@ -67,11 +80,41 @@ class TrackHttpRequest
             responseHeaders: [],
             responseBody: null,
             request_type: 'http',
-            error_message: $event->exception->getMessage()
+            error_message: $event->exception->getMessage(),
+            userContext: $userContext
         );
 
-        // Clean up the start time
+        // Clean up
         $this->removeRequestStartTime($event->request);
+        unset($this->requestUserContext[$key]);
+    }
+    
+    /**
+     * Capture user context from Laravel's auth system.
+     */
+    private function captureUserContext(): array
+    {
+        $context = 'anonymous';
+        
+        if (!app()->runningInConsole()) {
+            $context = Auth::check() ? 'authenticated' : 'anonymous';
+        } else {
+            try {
+                if (app()->bound('queue.worker')) {
+                    $context = 'job';
+                } else {
+                    $context = 'console';
+                }
+            } catch (\Exception $e) {
+                $context = 'console';
+            }
+        }
+        
+        return [
+            'user_id' => Auth::id(),
+            'user_type' => Auth::user() ? get_class(Auth::user()) : null,
+            'context' => $context,
+        ];
     }
 
     /**
