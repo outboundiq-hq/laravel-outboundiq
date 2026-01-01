@@ -82,4 +82,58 @@ class OutboundIQService
     {
         return $this->client->recommend($serviceName, $options);
     }
+
+    /**
+     * Get status and metrics for a provider
+     *
+     * Returns real-time actionable data for decision-making:
+     * - Provider status (from status page)
+     * - Aggregate metrics (success rate, latency)
+     * - Active incidents
+     * - Affected components
+     *
+     * Usage:
+     *   $status = OutboundIQ::providerStatus('paystack');
+     *   
+     *   if ($status && $status['decision']['usable']) {
+     *       // Safe to make API calls to this provider
+     *   } elseif ($status['decision']['action'] === 'avoid') {
+     *       // Use fallback provider
+     *   }
+     *
+     * @param string $providerSlug The provider slug (e.g., 'paystack')
+     * @return array|null The status response from server, or null on failure
+     */
+    public function providerStatus(string $providerSlug): ?array
+    {
+        return $this->client->providerStatus($providerSlug);
+    }
+
+    /**
+     * Get status and metrics for a specific endpoint
+     *
+     * Returns real-time actionable data for decision-making:
+     * - Endpoint-specific metrics (success rate, latency, schema stability)
+     * - Provider status (from status page)
+     * - Active incidents
+     * - Latency trend
+     *
+     * Usage:
+     *   // Get endpoint slug from dashboard or use the auto-generated one
+     *   $status = OutboundIQ::endpointStatus('paystack-post-transaction-initialize');
+     *   
+     *   if ($status && $status['decision']['usable']) {
+     *       // Safe to call this endpoint
+     *       // Check $status['metrics']['avg_latency_ms'] for expected latency
+     *   } elseif ($status['decision']['action'] === 'caution') {
+     *       // Proceed with extra error handling
+     *   }
+     *
+     * @param string $endpointSlug The endpoint slug (e.g., 'paystack-post-transaction-initialize')
+     * @return array|null The status response from server, or null on failure
+     */
+    public function endpointStatus(string $endpointSlug): ?array
+    {
+        return $this->client->endpointStatus($endpointSlug);
+    }
 } 
