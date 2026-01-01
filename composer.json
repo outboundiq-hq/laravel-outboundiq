@@ -8,8 +8,17 @@
         "illuminate/support": "^8.0|^9.0|^10.0|^12.0",
         "illuminate/http": "^8.0|^9.0|^10.0|^12.0",
         "illuminate/contracts": "^8.0|^9.0|^10.0|^12.0",
-        "outboundiq/php": "dev-main"
+        "outboundiq/php": "@dev"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../outboundiq-php",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require-dev": {
         "phpunit/phpunit": "^10.0",
         "orchestra/testbench": "^8.0"

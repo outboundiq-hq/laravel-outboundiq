@@ -51,4 +51,35 @@ class OutboundIQService
             request_type: $request_type
         );
     }
+
+    /**
+     * Get recommendation for a service
+     *
+     * Returns the best provider/endpoint to use based on:
+     * - Your actual API usage data (success rate, latency, stability)
+     * - Provider status page health
+     * - Recent incidents
+     *
+     * Usage:
+     *   // Basic usage
+     *   $result = OutboundIQ::recommend('payment-processing');
+     *   
+     *   // With custom request ID for tracing
+     *   $result = OutboundIQ::recommend('payment-processing', [
+     *       'request_id' => 'my-trace-id-123'
+     *   ]);
+     *   
+     *   if ($result && $result['decision']['action'] === 'proceed') {
+     *       // Use $result['decision']['use'] as the provider
+     *   }
+     *
+     * @param string $serviceName The service name (e.g., 'payment-processing')
+     * @param array $options Optional settings:
+     *                       - 'request_id': Your own trace ID for correlation (auto-generated if not provided)
+     * @return array|null The recommendation response from server, or null on failure
+     */
+    public function recommend(string $serviceName, array $options = []): ?array
+    {
+        return $this->client->recommend($serviceName, $options);
+    }
 } 

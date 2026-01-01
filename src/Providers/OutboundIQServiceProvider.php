@@ -5,6 +5,7 @@ namespace OutboundIQ\Laravel\Providers;
 use Illuminate\Support\ServiceProvider;
 use OutboundIQ\Client;
 use OutboundIQ\Laravel\Http\OutboundIQGuzzleClient;
+use OutboundIQ\Laravel\Services\OutboundIQService;
 use Illuminate\Http\Client\Events\RequestSending;
 use Illuminate\Http\Client\Events\ResponseReceived;
 use Illuminate\Http\Client\Events\ConnectionFailed;
@@ -30,6 +31,16 @@ class OutboundIQServiceProvider extends ServiceProvider
                     'temp_dir' => config('outboundiq.temp_dir')
                 ]
             );
+        });
+
+        // Bind the OutboundIQService for the Facade
+        $this->app->singleton('outboundiq', function ($app) {
+            return new OutboundIQService($app->make(Client::class));
+        });
+
+        // Also bind by class name for type-hinted injection
+        $this->app->singleton(OutboundIQService::class, function ($app) {
+            return $app->make('outboundiq');
         });
 
         $this->app->bind(OutboundIQGuzzleClient::class, function ($app) {
