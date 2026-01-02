@@ -4,6 +4,7 @@ namespace OutboundIQ\Laravel\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use OutboundIQ\Client;
+use OutboundIQ\Laravel\Console\OutboundIQTestCommand;
 use OutboundIQ\Laravel\Http\OutboundIQGuzzleClient;
 use OutboundIQ\Laravel\Services\OutboundIQService;
 use Illuminate\Http\Client\Events\RequestSending;
@@ -61,6 +62,11 @@ class OutboundIQServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../../config/outboundiq.php' => config_path('outboundiq.php'),
             ], 'config');
+
+            // Register Artisan commands
+            $this->commands([
+                OutboundIQTestCommand::class,
+            ]);
         }
 
         // Register event listeners for Laravel HTTP Client
