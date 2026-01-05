@@ -21,40 +21,21 @@ class OutboundIQServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/outboundiq.php', 'outboundiq');
 
-        // Configure the queue transport dispatcher before creating the client
         $this->configureQueueTransport();
 
-        $this->app->singleton(Client::class, function ($app) {
-            return new Client(
-                apiKey: config('outboundiq.key'),
-                options: [
-                    'enabled' => config('outboundiq.enabled', true),
-                    'transport' => config('outboundiq.transport', 'async'),
-                    'buffer_size' => config('outboundiq.max_items', 100),
-                ]
-            );
-        });
+        $this->app->singleton(Client::class, fn() => new Client(
+            apiKey: config('outboundiq.key'),
+            options: [
+                'enabled' => config('outboundiq.enabled', true),
+                'transport' => config('outboundiq.transport', 'async'),
+                'buffer_size' => config('outboundiq.max_items', 100),
+            ]
+        ));
 
-        // Bind the OutboundIQService for the Facade
-        $this->app->singleton('outboundiq', function ($app) {
-            return new OutboundIQService($app->make(Client::class));
-        });
-
-        // Also bind by class name for type-hinted injection
-        $this->app->singleton(OutboundIQService::class, function ($app) {
-            return $app->make('outboundiq');
-        });
-
-        $this->app->bind(OutboundIQGuzzleClient::class, function ($app) {
-            return new OutboundIQGuzzleClient(
-                outboundClient: $app->make(Client::class)
-            );
-        });
-
-        // Register the HTTP request tracking listener
-        $this->app->singleton(TrackHttpRequest::class, function ($app) {
-            return new TrackHttpRequest($app->make(Client::class));
-        });
+        $this->app->singleton('outboundiq', fn($app) => new OutboundIQService($app->make(Client::class)));
+        $this->app->singleton(OutboundIQService::class, fn($app) => $app->make('outboundiq'));
+        $this->app->bind(OutboundIQGuzzleClient::class, fn($app) => new OutboundIQGuzzleClient($app->make(Client::class)));
+        $this->app->singleton(TrackHttpRequest::class, fn($app) => new TrackHttpRequest($app->make(Client::class)));
     }
 
     public function boot(): void
@@ -64,23 +45,15 @@ class OutboundIQServiceProvider extends ServiceProvider
                 __DIR__.'/../../config/outboundiq.php' => config_path('outboundiq.php'),
             ], 'config');
 
-            // Register Artisan commands
-            $this->commands([
-                OutboundIQTestCommand::class,
-            ]);
+            $this->commands([OutboundIQTestCommand::class]);
         }
 
-        // Register event listeners for Laravel HTTP Client
+        // Auto-track Laravel HTTP client calls
         $this->app['events']->listen(RequestSending::class, [TrackHttpRequest::class, 'handleSending']);
         $this->app['events']->listen(ResponseReceived::class, [TrackHttpRequest::class, 'handleResponse']);
         $this->app['events']->listen(ConnectionFailed::class, [TrackHttpRequest::class, 'handleFailure']);
     }
 
-    /**
-     * Configure the queue transport dispatcher for Laravel.
-     * 
-     * This sets up the QueueTransport to dispatch jobs via Laravel's queue system.
-     */
     protected function configureQueueTransport(): void
     {
         QueueTransport::setDispatcher(function (array $metrics, Configuration $config) {
