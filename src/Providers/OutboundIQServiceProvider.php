@@ -4,8 +4,11 @@ namespace OutboundIQ\Laravel\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use OutboundIQ\Client;
+use OutboundIQ\Configuration;
+use OutboundIQ\Transports\QueueTransport;
 use OutboundIQ\Laravel\Console\OutboundIQTestCommand;
 use OutboundIQ\Laravel\Http\OutboundIQGuzzleClient;
+use OutboundIQ\Laravel\Jobs\SendOutboundMetricsJob;
 use OutboundIQ\Laravel\Services\OutboundIQService;
 use Illuminate\Http\Client\Events\RequestSending;
 use Illuminate\Http\Client\Events\ResponseReceived;
@@ -17,6 +20,9 @@ class OutboundIQServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/outboundiq.php', 'outboundiq');
+
+        // Configure the queue transport dispatcher before creating the client
+        $this->configureQueueTransport();
 
         $this->app->singleton(Client::class, function ($app) {
             return new Client(
@@ -73,5 +79,23 @@ class OutboundIQServiceProvider extends ServiceProvider
         $this->app['events']->listen(RequestSending::class, [TrackHttpRequest::class, 'handleSending']);
         $this->app['events']->listen(ResponseReceived::class, [TrackHttpRequest::class, 'handleResponse']);
         $this->app['events']->listen(ConnectionFailed::class, [TrackHttpRequest::class, 'handleFailure']);
+    }
+
+    /**
+     * Configure the queue transport dispatcher for Laravel.
+     * 
+     * This sets up the QueueTransport to dispatch jobs via Laravel's queue system.
+     */
+    protected function configureQueueTransport(): void
+    {
+        QueueTransport::setDispatcher(function (array $metrics, Configuration $config) {
+            SendOutboundMetricsJob::dispatch(
+                metrics: $metrics,
+                endpoint: $config->getEndpoint(),
+                apiKey: $config->getApiKey(),
+                version: $config->getVersion(),
+                timeout: $config->getTimeout()
+            )->onQueue(config('outboundiq.queue', 'default'));
+        });
     }
 }

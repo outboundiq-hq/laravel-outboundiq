@@ -51,7 +51,22 @@ return [
     |
     | Configure how metrics are transported to OutboundIQ.
     |
+    | Supported transports:
+    | - 'async': Non-blocking background process (default, best for traditional servers)
+    | - 'sync': Blocking HTTP request (use for Laravel Vapor / AWS Lambda)
+    | - 'queue': Laravel queue job (use for Vapor with SQS, truly async)
+    |
     */
-    'transport' => env('OUTBOUNDIQ_TRANSPORT', 'file'),
+    'transport' => env('OUTBOUNDIQ_TRANSPORT', 'async'),
     'temp_dir' => env('OUTBOUNDIQ_TEMP_DIR', null),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Queue Settings (only used when transport = 'queue')
+    |--------------------------------------------------------------------------
+    |
+    | Configure which queue to use for sending metrics.
+    |
+    */
+    'queue' => env('OUTBOUNDIQ_QUEUE', 'default'),
 ]; 
