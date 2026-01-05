@@ -6,66 +6,50 @@ return [
     | OutboundIQ API Key
     |--------------------------------------------------------------------------
     |
-    | Your OutboundIQ API key. This is required for the package to work.
+    | Your OutboundIQ API key. Get it from your project settings.
     |
     */
-    'api_key' => env('OUTBOUNDIQ_API_KEY'),
+    'key' => env('OUTBOUNDIQ_KEY'),
 
     /*
     |--------------------------------------------------------------------------
     | Enable/Disable Monitoring
     |--------------------------------------------------------------------------
     |
-    | Set this to false to disable monitoring in certain environments.
+    | Set to false to disable OutboundIQ in certain environments.
     |
     */
     'enabled' => env('OUTBOUNDIQ_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------
-    | Batch Settings
+    | Transport Method
     |--------------------------------------------------------------------------
     |
-    | Configure how metrics are batched and sent to OutboundIQ.
-    |
-    */
-    'batch_size' => env('OUTBOUNDIQ_BATCH_SIZE', 50),
-    'buffer_size' => env('OUTBOUNDIQ_BUFFER_SIZE', 100),
-    'flush_interval' => env('OUTBOUNDIQ_FLUSH_INTERVAL', 60),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Request Settings
-    |--------------------------------------------------------------------------
-    |
-    | Configure timeout and retry settings for API calls.
-    |
-    */
-    'timeout' => env('OUTBOUNDIQ_TIMEOUT', 5),
-    'retry_attempts' => env('OUTBOUNDIQ_RETRY_ATTEMPTS', 3),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Transport Settings
-    |--------------------------------------------------------------------------
-    |
-    | Configure how metrics are transported to OutboundIQ.
-    |
-    | Supported transports:
-    | - 'async': Non-blocking background process (default, best for traditional servers)
-    | - 'sync': Blocking HTTP request (use for Laravel Vapor / AWS Lambda)
-    | - 'queue': Laravel queue job (use for Vapor with SQS, truly async)
+    | How metrics are sent to OutboundIQ:
+    | - 'async': Background process (default, best for traditional servers)
+    | - 'sync': Blocking request (use for Laravel Vapor / AWS Lambda)
+    | - 'queue': Laravel queue (use for Vapor with SQS)
     |
     */
     'transport' => env('OUTBOUNDIQ_TRANSPORT', 'async'),
-    'temp_dir' => env('OUTBOUNDIQ_TEMP_DIR', null),
 
     /*
     |--------------------------------------------------------------------------
-    | Queue Settings (only used when transport = 'queue')
+    | Max Items
     |--------------------------------------------------------------------------
     |
-    | Configure which queue to use for sending metrics.
+    | Maximum number of API calls to buffer before sending.
+    |
+    */
+    'max_items' => env('OUTBOUNDIQ_MAX_ITEMS', 100),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Queue Name (only when transport = 'queue')
+    |--------------------------------------------------------------------------
+    |
+    | Which queue to use for sending metrics.
     |
     */
     'queue' => env('OUTBOUNDIQ_QUEUE', 'default'),
