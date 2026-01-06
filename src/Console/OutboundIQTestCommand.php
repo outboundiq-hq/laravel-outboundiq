@@ -24,14 +24,14 @@ class OutboundIQTestCommand extends Command
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->newLine();
 
-        $apiKey = config('outboundiq.api_key');
+        $apiKey = config('outboundiq.key');
         $enabled = config('outboundiq.enabled', true);
 
         if (!$apiKey) {
-            $this->error('✗ OUTBOUNDIQ_API_KEY is not configured');
+            $this->error('✗ OUTBOUNDIQ_KEY is not configured');
             $this->line('');
             $this->line('Please add to your .env file:');
-            $this->line('  OUTBOUNDIQ_API_KEY=your_api_key_here');
+            $this->line('  OUTBOUNDIQ_KEY=your_api_key_here');
             return 1;
         }
 

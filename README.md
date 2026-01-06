@@ -21,7 +21,7 @@ php artisan vendor:publish --tag="outboundiq-config"
 Add your OutboundIQ API key to your `.env` file:
 
 ```bash
-OUTBOUNDIQ_API_KEY=your-api-key
+OUTBOUNDIQ_KEY=your-api-key
 ```
 
 ## Usage
