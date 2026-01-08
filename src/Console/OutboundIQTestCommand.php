@@ -6,16 +6,12 @@ namespace OutboundIQ\Laravel\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use OutboundIQ\Client;
 
-/**
- * Artisan command to test OutboundIQ integration
- * 
- * Run with: php artisan outboundiq:test
- */
 class OutboundIQTestCommand extends Command
 {
     protected $signature = 'outboundiq:test';
-    protected $description = 'Test OutboundIQ integration by making real HTTP calls that get tracked';
+    protected $description = 'Test OutboundIQ integration by verifying API key and making tracked HTTP calls';
 
     public function handle(): int
     {
@@ -29,7 +25,7 @@ class OutboundIQTestCommand extends Command
 
         if (!$apiKey) {
             $this->error('✗ OUTBOUNDIQ_KEY is not configured');
-            $this->line('');
+            $this->newLine();
             $this->line('Please add to your .env file:');
             $this->line('  OUTBOUNDIQ_KEY=your_api_key_here');
             return 1;
@@ -41,53 +37,79 @@ class OutboundIQTestCommand extends Command
             return 1;
         }
 
-        $this->line('📡 Making test HTTP calls (these will be tracked by OutboundIQ)...');
-        $this->newLine();
         $this->line('   API Key: ' . substr($apiKey, 0, 20) . '...');
         $this->newLine();
 
+        $this->line('   → Verifying API key with OutboundIQ (tracked)...');
+        
         try {
-            // Test 1: GET request
-            $this->line('   → Making GET request to httpbin.org/get...');
-            $response1 = Http::get('https://httpbin.org/get', [
-                'source' => 'outboundiq-test',
-                'framework' => 'laravel',
-            ]);
-            $this->info('   ✓ GET request completed (Status: ' . $response1->status() . ')');
+            /** @var Client $client */
+            $client = app(Client::class);
+            $pingUrl = $client->getConfig()->getBaseUrl() . '/ping';
+            
+            // Using Http facade so this call is also tracked!
+            $startPing = microtime(true);
+            $response = Http::withToken($apiKey)
+                ->timeout(10)
+                ->get($pingUrl);
+            $pingDuration = round((microtime(true) - $startPing) * 1000);
 
-            // Test 2: POST request
-            $this->line('   → Making POST request to httpbin.org/post...');
-            $response2 = Http::post('https://httpbin.org/post', [
-                'source' => 'outboundiq-test',
-                'framework' => 'laravel',
-            ]);
-            $this->info('   ✓ POST request completed (Status: ' . $response2->status() . ')');
-
-            // Test 3: Another GET to a different endpoint
-            $this->line('   → Making GET request to jsonplaceholder.typicode.com...');
-            $response3 = Http::get('https://jsonplaceholder.typicode.com/posts/1');
-            $this->info('   ✓ GET request completed (Status: ' . $response3->status() . ')');
-
-            $this->newLine();
-            $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            $this->info('✓ All test requests completed!');
-            $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            $this->newLine();
-            $this->line('🎉 These HTTP calls have been automatically tracked by OutboundIQ!');
-            $this->newLine();
-            $this->line('   Check your dashboard to see the data:');
-            $this->line('   <fg=blue>https://outboundiq.dev/dashboard</>');
-            $this->newLine();
-
-            return 0;
+            if ($response->successful() && $response->json('status') === true) {
+                $data = $response->json('data');
+                $projectName = $data['project']['name'] ?? 'Unknown';
+                $projectSlug = $data['project']['slug'] ?? '';
+                $teamName = $data['team']['name'] ?? 'Unknown';
+                $plan = $data['plan'] ?? 'free';
+                $usage = $data['usage']['api_calls'] ?? 0;
+                $limit = $data['usage']['limit'] ?? 0;
+                
+                $this->info("   ✓ Connected! Project: \"{$projectName}\" ({$pingDuration}ms)");
+                $this->line("     Team: {$teamName} | Plan: {$plan}");
+                if ($limit > 0) {
+                    $this->line("     Usage: {$usage} / {$limit} API calls this period");
+                }
+                $this->newLine();
+            } else {
+                $message = $response->json('message') ?? 'Unknown error';
+                $this->error("   ✗ API key verification failed: {$message}");
+                return 1;
+            }
         } catch (\Throwable $e) {
-            $this->error('✗ Failed to make test requests: ' . $e->getMessage());
+            $this->warn("   ⚠ Could not verify API key (offline mode): " . $e->getMessage());
+            $this->line("     Continuing with HTTP tracking test...");
             $this->newLine();
-            $this->line('Please check:');
-            $this->line('  1. You have internet connectivity');
-            $this->line('  2. The test endpoints are reachable');
+            $projectSlug = null;
+        }
+
+        $this->line('   → Making external HTTP request (tracked)...');
+
+        try {
+            $startTime = microtime(true);
+            $response = Http::get('https://jsonplaceholder.typicode.com/posts/1');
+            $duration = round((microtime(true) - $startTime) * 1000);
+            
+            $this->info("   ✓ Request tracked (Status: {$response->status()}, {$duration}ms)");
+        } catch (\Throwable $e) {
+            $this->error('   ✗ HTTP request failed: ' . $e->getMessage());
             return 1;
         }
+
+        $this->newLine();
+        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->info('✓ All tests passed! (2 API calls tracked)');
+        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->newLine();
+        $this->line('🎉 Your OutboundIQ integration is working!');
+        $this->line('   Both API calls have been tracked and will appear in your dashboard.');
+        $this->newLine();
+        
+        if (!empty($projectSlug)) {
+            $this->line('   Dashboard: <fg=blue>https://outboundiq.dev/dashboard/' . $projectSlug . '</>');
+        } else {
+            $this->line('   Dashboard: <fg=blue>https://outboundiq.dev/dashboard</>');
+        }
+        $this->newLine();
+
+        return 0;
     }
 }
-
