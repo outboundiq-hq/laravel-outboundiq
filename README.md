@@ -50,15 +50,44 @@ OutboundIQ::trackApiCall(
 You can configure OutboundIQ through your `.env` file:
 
 ```bash
+# Required - your API key from OutboundIQ dashboard
+OUTBOUNDIQ_KEY=your-api-key
+
+# Enable/disable monitoring (default: true)
 OUTBOUNDIQ_ENABLED=true
-OUTBOUNDIQ_ENDPOINT=null
-OUTBOUNDIQ_BATCH_SIZE=50
-OUTBOUNDIQ_BUFFER_SIZE=100
-OUTBOUNDIQ_FLUSH_INTERVAL=60
-OUTBOUNDIQ_TIMEOUT=5
-OUTBOUNDIQ_RETRY_ATTEMPTS=3
-OUTBOUNDIQ_TRANSPORT=file
-OUTBOUNDIQ_TEMP_DIR=null
+
+# Transport method: 'async', 'sync', or 'queue' (default: async)
+# - async: Background process, best for traditional servers
+# - sync: Blocking request, use for Laravel Vapor / AWS Lambda
+# - queue: Laravel queue, use for Vapor with SQS
+OUTBOUNDIQ_TRANSPORT=async
+
+# Max items to buffer before sending (default: 100)
+OUTBOUNDIQ_MAX_ITEMS=100
+
+# Queue name when using 'queue' transport (default: default)
+OUTBOUNDIQ_QUEUE=default
+
+# Custom agent URL (default: https://agent.outboundiq.dev/api/metric)
+# Override for staging or local development
+OUTBOUNDIQ_URL=https://agent.outboundiq.dev/api/metric
+```
+
+## Environment-Specific URLs
+
+For **local development**:
+```bash
+OUTBOUNDIQ_URL=http://agent.outboundiq.test/api/metric
+```
+
+For **staging**:
+```bash
+OUTBOUNDIQ_URL=https://agent.staging.outboundiq.dev/api/metric
+```
+
+For **production** (default, no need to set):
+```bash
+OUTBOUNDIQ_URL=https://agent.outboundiq.dev/api/metric
 ```
 
 ## License

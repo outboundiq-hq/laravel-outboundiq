@@ -29,6 +29,7 @@ class OutboundIQServiceProvider extends ServiceProvider
                 'enabled' => config('outboundiq.enabled', true),
                 'transport' => config('outboundiq.transport', 'async'),
                 'buffer_size' => config('outboundiq.max_items', 100),
+                'url' => config('outboundiq.url', 'https://agent.outboundiq.dev/api/metric'),
             ]
         ));
 
