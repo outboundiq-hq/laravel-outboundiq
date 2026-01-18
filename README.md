@@ -68,28 +68,6 @@ OUTBOUNDIQ_MAX_ITEMS=100
 # Queue name when using 'queue' transport (default: default)
 OUTBOUNDIQ_QUEUE=default
 
-# Custom agent URL (default: https://agent.outboundiq.dev/api/metric)
-# Override for staging or local development
-OUTBOUNDIQ_URL=https://agent.outboundiq.dev/api/metric
-```
-
-## Environment-Specific URLs
-
-For **local development**:
-```bash
-OUTBOUNDIQ_URL=http://agent.outboundiq.test/api/metric
-```
-
-For **staging**:
-```bash
-OUTBOUNDIQ_URL=https://agent.staging.outboundiq.dev/api/metric
-```
-
-For **production** (default, no need to set):
-```bash
-OUTBOUNDIQ_URL=https://agent.outboundiq.dev/api/metric
-```
-
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information. 
