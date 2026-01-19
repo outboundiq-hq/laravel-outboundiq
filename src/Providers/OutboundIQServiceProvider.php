@@ -58,13 +58,19 @@ class OutboundIQServiceProvider extends ServiceProvider
     protected function configureQueueTransport(): void
     {
         QueueTransport::setDispatcher(function (array $metrics, Configuration $config) {
-            SendOutboundMetricsJob::dispatch(
+            $job = SendOutboundMetricsJob::dispatch(
                 metrics: $metrics,
                 endpoint: $config->getEndpoint(),
                 apiKey: $config->getApiKey(),
                 version: $config->getVersion(),
                 timeout: $config->getTimeout()
-            )->onQueue(config('outboundiq.queue', 'default'));
+            );
+
+            // Only specify queue if explicitly configured, otherwise use app's default
+            $queue = config('outboundiq.queue');
+            if ($queue) {
+                $job->onQueue($queue);
+            }
         });
     }
 }

@@ -62,5 +62,5 @@ return [
     | Which queue to use for sending metrics.
     |
     */
-    'queue' => env('OUTBOUNDIQ_QUEUE', 'default'),
+    'queue' => env('OUTBOUNDIQ_QUEUE'),
 ]; 
