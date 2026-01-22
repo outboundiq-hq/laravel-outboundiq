@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class SendOutboundMetricsJob implements ShouldQueue
 {
@@ -51,8 +52,14 @@ class SendOutboundMetricsJob implements ShouldQueue
         $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
         curl_close($handle);
 
-        if ($errorNo !== 0 || ($httpCode !== 200 && $httpCode !== 201)) {
-            throw new \Exception("Failed to send metrics - HTTP $httpCode");
+        if ($errorNo !== 0 || ($httpCode < 200 || $httpCode >= 300)) {
+            $errorMessage = "Failed to send metrics - HTTP $httpCode" . ($errorNo !== 0 ? " (cURL error: $errorNo)" : '');
+            Log::warning('OutboundIQ: Metrics send failed', [
+                'http_code' => $httpCode,
+                'curl_error' => $errorNo,
+                'endpoint' => $this->endpoint,
+            ]);
+            return;
         }
     }
 }
