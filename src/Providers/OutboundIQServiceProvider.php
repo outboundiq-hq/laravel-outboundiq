@@ -42,9 +42,12 @@ class OutboundIQServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
-            $this->publishes([
+            $configPublishMap = [
                 __DIR__.'/../../config/outboundiq.php' => config_path('outboundiq.php'),
-            ], 'config');
+            ];
+
+            $this->publishes($configPublishMap, 'config');
+            $this->publishes($configPublishMap, 'outboundiq-config');
 
             $this->commands([OutboundIQTestCommand::class]);
         }

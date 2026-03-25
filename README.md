@@ -18,6 +18,12 @@ Publish the config file:
 php artisan vendor:publish --tag="outboundiq-config"
 ```
 
+If you prefer Laravel's generic config tag, this also works:
+
+```bash
+php artisan vendor:publish --provider="OutboundIQ\Laravel\Providers\OutboundIQServiceProvider" --tag="config"
+```
+
 Add your OutboundIQ API key to your `.env` file:
 
 ```bash
