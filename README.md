@@ -198,9 +198,6 @@ OUTBOUNDIQ_KEY=your_api_key_here
 # Optional
 OUTBOUNDIQ_ENABLED=true
 
-# Where metrics are sent
-OUTBOUNDIQ_URL=https://agent.outboundiq.dev/api/metric
-
 # Transport: async | sync | queue
 # - async: background process (default for traditional servers)
 # - sync: blocking (useful for some serverless runtimes)
@@ -241,7 +238,3 @@ OutboundIQ tracks outbound-call metadata and can capture headers/bodies for debu
 ## Support
 
 Email: [hello@outboundiq.dev](mailto:hello@outboundiq.dev)
-
-## License
-
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
