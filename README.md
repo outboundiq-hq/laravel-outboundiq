@@ -231,8 +231,8 @@ php artisan outboundiq:test
 
 ## Requirements
 
-- PHP 8.1+
-- Laravel / Illuminate 10.x, 11.x, 12.x
+- PHP 8.1+ (PHP 8.3+ required for Laravel 13)
+- Laravel / Illuminate 10.x, 11.x, 12.x, 13.x
 
 ## Security & privacy note
 
